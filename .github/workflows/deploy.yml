@@ -15,11 +15,11 @@ jobs:
           flutter-version: '3.24.0'
           channel: stable
 
-      - name: Install dependencies
-        run: flutter pub get
-
       - name: Check hardcoded domain literals
         run: bash scripts/check_domain_literals.sh
+
+      - name: Install dependencies
+        run: flutter pub get
 
       - name: Build Flutter Web
         run: flutter build web --release --web-renderer canvaskit --base-href /

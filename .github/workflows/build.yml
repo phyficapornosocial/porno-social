@@ -49,11 +49,11 @@ jobs:
           flutter-version: "3.24.0"
           cache: true
 
-      - name: Install dependencies
-        run: flutter pub get
-
       - name: Check hardcoded domain literals
         run: bash scripts/check_domain_literals.sh
+
+      - name: Install dependencies
+        run: flutter pub get
 
       - name: Build release APK
         run: flutter build apk --release --no-pub
