@@ -1,0 +1,47 @@
+{
+	"flutter": {
+		"platforms": {
+			"android": {
+				"default": {
+					"projectId": "pornosocial-c003d",
+					"appId": "1:214010796188:android:695d4449b6a9a129443559",
+					"fileOutput": "android/app/google-services.json"
+				}
+			},
+			"dart": {
+				"lib/firebase_options.dart": {
+					"projectId": "pornosocial-c003d",
+					"configurations": {
+						"android": "1:214010796188:android:695d4449b6a9a129443559",
+						"ios": "1:214010796188:ios:0f227da4e5dff8a2443559",
+						"macos": "1:214010796188:ios:0f227da4e5dff8a2443559",
+						"web": "1:214010796188:web:03f6be3918164f3f443559",
+						"windows": "1:214010796188:web:d94d8eb65825c1ba443559"
+					}
+				}
+			}
+		}
+	},
+	"firestore": {
+		"rules": "firestore.rules",
+		"indexes": "firestore.indexes.json"
+	},
+	"storage": {
+		"rules": "storage.rules"
+	},
+	"functions": {
+		"source": "functions",
+		"runtime": "nodejs20"
+	},
+	"hosting": {
+		"public": "build/web",
+		"ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+		"rewrites": [{ "source": "**", "destination": "/index.html" }],
+		"headers": [
+			{
+				"source": "**/*.@(js|css)",
+				"headers": [{ "key": "Cache-Control", "value": "max-age=31536000" }]
+			}
+		]
+	}
+}

@@ -1,0 +1,224 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isParticipant(participantIds) {
+      return isSignedIn() && request.auth.uid in participantIds;
+    }
+
+    function isAdmin() {
+      return isSignedIn()
+        && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
+    function isCreator(uid) {
+      return exists(/databases/$(database)/documents/users/$(uid))
+        && get(/databases/$(database)/documents/users/$(uid)).data.isCreator == true;
+    }
+
+    function validMessageType(messageType) {
+      return messageType in ['text', 'image', 'video'];
+    }
+
+    function validConversationDoc() {
+      return request.resource.data.keys().hasAll([
+        'participantIds',
+        'lastMessage',
+        'lastMessageAt',
+        'isPaidDm',
+        'dmPrice'
+      ])
+      && request.resource.data.participantIds.size() == 2
+      && request.auth.uid in request.resource.data.participantIds
+      && request.resource.data.dmPrice is number
+      && request.resource.data.dmPrice >= 0;
+    }
+
+    function messageBaseFieldsImmutable() {
+      return request.resource.data.senderId == resource.data.senderId
+        && request.resource.data.text == resource.data.text
+        && request.resource.data.mediaUrl == resource.data.mediaUrl
+        && request.resource.data.type == resource.data.type
+        && request.resource.data.isPaid == resource.data.isPaid
+        && request.resource.data.createdAt == resource.data.createdAt;
+    }
+
+    function validMessageCreate() {
+      return request.resource.data.keys().hasAll([
+        'senderId',
+        'text',
+        'mediaUrl',
+        'type',
+        'isPaid',
+        'isUnlocked',
+        'createdAt',
+        'readBy'
+      ])
+      && request.resource.data.senderId == request.auth.uid
+      && validMessageType(request.resource.data.type)
+      && request.resource.data.readBy.size() == 1
+      && request.resource.data.readBy[0] == request.auth.uid
+      && (
+        request.resource.data.isPaid == false
+          ? request.resource.data.isUnlocked == true
+          : request.resource.data.isUnlocked == false
+      )
+      && (
+        request.resource.data.isPaid == false
+          ? true
+          : isCreator(request.auth.uid)
+      );
+    }
+
+    function validMessageUpdate(participantIds) {
+      return isParticipant(participantIds)
+        && messageBaseFieldsImmutable()
+        && request.resource.data.readBy.hasAll(resource.data.readBy)
+        && request.resource.data.readBy.hasAny([request.auth.uid])
+        && (
+          request.resource.data.isUnlocked == resource.data.isUnlocked
+          || (
+            resource.data.isPaid == true
+            && resource.data.isUnlocked == false
+            && request.resource.data.isUnlocked == true
+            && request.auth.uid != resource.data.senderId
+          )
+        );
+    }
+
+    // Users: authenticated read, only owner writes
+    match /users/{uid} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null
+        && (
+          request.auth.uid == uid
+          || isAdmin()
+        );
+
+      // Private data: owner-only
+      match /private/{privateId} {
+        allow read, write: if request.auth != null && request.auth.uid == uid;
+      }
+    }
+
+    // Admin role documents are write-protected to server-side tooling.
+    match /admins/{uid} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
+
+    // User-submitted reports; moderation actions are admin-only.
+    match /reports/{reportId} {
+      allow create: if isSignedIn()
+        && request.resource.data.reporterUid == request.auth.uid
+        && request.resource.data.targetType in ['post', 'user', 'story', 'comment']
+        && request.resource.data.reason in ['illegal', 'underage', 'spam', 'harassment', 'other']
+        && request.resource.data.status == 'pending';
+      allow read: if isAdmin();
+      allow update, delete: if isAdmin();
+    }
+
+    // Follow graph: users manage their own edge docs only.
+    match /followers/{uid} {
+      allow read: if isSignedIn();
+      allow create, update: if isSignedIn() && request.auth.uid == uid;
+
+      match /following/{targetUid} {
+        allow read: if isSignedIn();
+        allow create, update, delete: if isSignedIn() && request.auth.uid == uid;
+      }
+
+      match /followers/{followerUid} {
+        allow read: if isSignedIn();
+        allow create, update, delete: if isSignedIn() && request.auth.uid == followerUid;
+      }
+    }
+
+    // Notification fanout queue, consumed by backend functions.
+    match /notifications_queue/{itemId} {
+      allow create: if isSignedIn() && request.resource.data.fromUid == request.auth.uid;
+      allow read, update, delete: if false;
+    }
+
+    // Per-user notification center.
+    match /notifications/{uid} {
+      allow read: if isSignedIn() && request.auth.uid == uid;
+      allow write: if false;
+
+      match /items/{notifId} {
+        allow read: if isSignedIn() && request.auth.uid == uid;
+        allow update: if isSignedIn()
+          && request.auth.uid == uid
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isRead']);
+        allow create, delete: if false;
+      }
+    }
+
+    // Posts: authenticated read, create by any auth user, owner update/delete
+    match /posts/{postId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null;
+      allow update, delete: if request.auth != null && request.auth.uid == resource.data.authorId;
+    }
+
+    // Subscriptions: only involved parties can read; subscriber creates
+    match /subscriptions/{subId} {
+      allow read: if request.auth != null
+                  && (request.auth.uid == resource.data.subscriberId
+                      || request.auth.uid == resource.data.creatorId);
+      allow create: if request.auth != null
+                    && request.auth.uid == request.resource.data.subscriberId;
+    }
+
+    // Stories: authenticated users read/create, author deletes
+    match /stories/{storyId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn();
+      allow delete: if isSignedIn() && request.auth.uid == resource.data.authorId;
+    }
+
+    // Direct messages
+    match /conversations/{convId} {
+      allow read: if isParticipant(resource.data.participantIds);
+
+      allow create: if validConversationDoc();
+
+      // Allow participants to update conversation metadata only.
+      allow update: if isParticipant(resource.data.participantIds)
+        && request.resource.data.participantIds == resource.data.participantIds
+        && request.resource.data.keys().hasOnly([
+          'participantIds',
+          'lastMessage',
+          'lastMessageAt',
+          'isPaidDm',
+          'dmPrice'
+        ])
+        && request.resource.data.dmPrice is number
+        && request.resource.data.dmPrice >= 0;
+
+      allow delete: if false;
+
+      match /messages/{msgId} {
+        allow read: if isParticipant(
+          get(/databases/$(database)/documents/conversations/$(convId)).data.participantIds
+        );
+
+        allow create: if isParticipant(
+            get(/databases/$(database)/documents/conversations/$(convId)).data.participantIds
+          )
+          && validMessageCreate();
+
+        // Allow read receipts and one-way unlock transitions for paid messages.
+        allow update: if validMessageUpdate(
+          get(/databases/$(database)/documents/conversations/$(convId)).data.participantIds
+        );
+
+        allow delete: if false;
+      }
+    }
+  }
+}
