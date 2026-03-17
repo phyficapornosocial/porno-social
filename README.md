@@ -1,4 +1,4 @@
-# porno_social
+# porno-social
 
 A new Flutter project.
 
