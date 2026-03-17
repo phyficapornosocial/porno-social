@@ -1,89 +1,35 @@
-name: Build and Deploy
+name: Build & Deploy to porno-social.com
 
 on:
   push:
     branches: [main]
 
-permissions:
-  contents: read
-
-concurrency:
-  group: build-deploy-${{ github.ref }}
-  cancel-in-progress: true
-
 jobs:
-  build-and-deploy:
+  deploy-web:
     runs-on: ubuntu-latest
-    timeout-minutes: 40
-    defaults:
-      run:
-        shell: bash
-    env:
-      FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
-      KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
-      KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-      KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-      STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          persist-credentials: false
+      - uses: actions/checkout@v4
 
-      - name: Set up Java 17
-        uses: actions/setup-java@v4
-        with:
-          java-version: '17'
-          distribution: 'temurin'
-
-      - name: Set up Flutter 3.24.0
-        uses: subosito/flutter-action@v2
+      - uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.24.0'
           channel: stable
-          cache: true
 
       - name: Install dependencies
         run: flutter pub get
 
-      - name: Run tests
-        run: flutter test --no-pub
+      - name: Check hardcoded domain literals
+        run: bash scripts/check_domain_literals.sh
 
-      - name: Build Web
-        run: flutter build web --release --web-renderer canvaskit --no-pub
+      - name: Build Flutter Web
+        run: flutter build web --release --web-renderer canvaskit --base-href /
 
-      - name: Build Android APK
-        if: env.KEYSTORE_BASE64 != '' && env.KEY_ALIAS != '' && env.KEY_PASSWORD != '' && env.STORE_PASSWORD != ''
-        run: |
-          echo "$KEYSTORE_BASE64" | base64 --decode > android/app/release.jks
-          cat > android/key.properties << EOF
-          storePassword=$STORE_PASSWORD
-          keyPassword=$KEY_PASSWORD
-          keyAlias=$KEY_ALIAS
-          storeFile=release.jks
-          EOF
-          flutter build apk --release --no-pub
-
-      - name: Deploy to Firebase Hosting
-        if: env.FIREBASE_SERVICE_ACCOUNT != ''
+      - name: Deploy to Firebase Hosting (porno-social.com)
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
-          firebaseServiceAccount: ${{ env.FIREBASE_SERVICE_ACCOUNT }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
           channelId: live
           projectId: pornosocial-c003d
-
-      - name: Upload APK artifact
-        if: env.KEYSTORE_BASE64 != '' && env.KEY_ALIAS != '' && env.KEY_PASSWORD != '' && env.STORE_PASSWORD != ''
-        uses: actions/upload-artifact@v4
-        with:
-          name: release-apk
-          path: build/app/outputs/flutter-apk/app-release.apk
-          if-no-files-found: error
-          retention-days: 30
-
-      - name: Clean up signing files
-        if: always()
-        run: |
-          rm -f android/app/release.jks
-          rm -f android/key.properties
+          # After domain is connected, Firebase automatically serves
+          # the deployed build at www.porno-social.com

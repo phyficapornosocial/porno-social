@@ -18,6 +18,9 @@ jobs:
     defaults:
       run:
         shell: bash
+    # NOTE:
+    # VS Code's local GitHub Actions diagnostics can warn that custom
+    # secrets are "possibly invalid" even when the workflow executes fine.
     env:
       FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
       FIREBASE_APP_ID_ANDROID: ${{ secrets.FIREBASE_APP_ID_ANDROID }}
@@ -48,6 +51,9 @@ jobs:
 
       - name: Install dependencies
         run: flutter pub get
+
+      - name: Check hardcoded domain literals
+        run: bash scripts/check_domain_literals.sh
 
       - name: Build release APK
         run: flutter build apk --release --no-pub

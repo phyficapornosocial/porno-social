@@ -1,16 +1,19 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:porno_social/config/app_config.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 class SubscribeScreen extends StatefulWidget {
   final String creatorId;
   final double price;
+  final String creatorName;
 
   const SubscribeScreen({
     super.key,
     required this.creatorId,
     required this.price,
+    this.creatorName = 'Creator',
   });
 
   @override
@@ -24,8 +27,15 @@ class _SubscribeScreenState extends State<SubscribeScreen> {
   void initState() {
     super.initState();
 
-    final segpayUrl =
-        'https://www.segpay.com/payment?merchant_id=YOUR_MERCHANT_ID&price=${widget.price}&currency=GBP&item_desc=Subscription+to+Creator&return_url=https://porno-social.com/subscription/success';
+    final segpayUrl = Uri.https('www.segpay.com', '/payment', {
+      'merchant_id': 'YOUR_MERCHANT_ID',
+      'price': widget.price.toString(),
+      'currency': 'GBP',
+      'item_desc': 'Subscription to ${widget.creatorName}',
+      'return_url': AppConfig.segpaySuccessUrl,
+      'cancel_url': AppConfig.segpayCancelUrl,
+      'postback_url': AppConfig.segpayPostbackUrl,
+    }).toString();
 
     _webViewController = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)

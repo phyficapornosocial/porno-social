@@ -1,5 +1,8 @@
+import 'package:porno_social/config/app_config.dart';
+
 class LegalContent {
-  static const termsOfService = '''
+  static final termsOfService =
+      '''
 TERMS OF SERVICE - PORNO SOCIAL LTD
 Last updated: January 2025
 
@@ -13,7 +16,7 @@ All content must comply with the UK Online Safety Act 2023. Content featuring mi
 We comply with UK age verification requirements. Users must complete identity verification before accessing explicit content.
 
 4. DMCA / COPYRIGHT
-We respond to valid DMCA takedown requests within 48 hours. To submit a takedown request, contact: dmca@porno-social.com
+We respond to valid DMCA takedown requests within 48 hours. To submit a takedown request, contact: ${AppConfig.dmcaEmail}
 
 5. GOVERNING LAW
 These terms are governed by the laws of England and Wales.
@@ -22,7 +25,8 @@ Company: Porno Social Ltd
 Registered in England and Wales
 ''';
 
-  static const privacyPolicy = '''
+  static final privacyPolicy =
+      '''
 PRIVACY POLICY - PORNO SOCIAL LTD
 
 DATA WE COLLECT
@@ -38,7 +42,7 @@ YOUR RIGHTS (UK GDPR)
 - Right to data portability
 - Right to object to processing
 
-To exercise your rights, contact: privacy@porno-social.com
+To exercise your rights, contact: ${AppConfig.privacyEmail}
 
 DATA RETENTION
 - Account data: retained while account is active plus 6 months
