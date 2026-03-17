@@ -2,6 +2,14 @@
 
 A new Flutter project.
 
+## Algolia Search Setup
+
+See [ALGOLIA_SETUP.md](ALGOLIA_SETUP.md) for:
+
+- required `--dart-define` runtime configuration
+- optional index name override
+- required Algolia user index fields for current filters
+
 ## Getting Started
 
 This project is a starting point for a Flutter application.
