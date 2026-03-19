@@ -49,3 +49,13 @@ app.*.map.json
 *.jks
 *.keystore
 
+# Firebase cache
+.firebase/
+
+# Runlogs
+runlogs/
+runlogs.zip
+
+# google-services.json (contains project identifiers — keep out of public repos)
+android/app/google-services.json
+
