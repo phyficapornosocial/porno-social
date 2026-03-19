@@ -1,11 +1,11 @@
 {
     "name": "PornoSocial",
     "short_name": "PornoSocial",
-    "start_url": "https://www.porno-social.com/",
+    "start_url": "/",
     "display": "standalone",
     "background_color": "#080808",
     "theme_color": "#e8000a",
-    "description": "Adult creator platform - UK",
+    "description": "Adult creator platform — UK",
     "lang": "en-GB",
     "orientation": "portrait",
     "id": "com.pornosocial",

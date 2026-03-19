@@ -1,0 +1,15 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Deploy Flutter Web to Firebase Hosting",
+      "type": "shell",
+      "command": "flutter build web; firebase deploy --only hosting --project pornosocial-c003d",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "problemMatcher": []
+    }
+  ]
+}

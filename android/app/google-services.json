@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "214010796188",
+    "project_id": "pornosocial-c003d",
+    "storage_bucket": "pornosocial-c003d.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:214010796188:android:695d4449b6a9a129443559",
+        "android_client_info": {
+          "package_name": "com.pornosocial.porno_social"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC97oxJT-ZSqEtWco9dtUxQlUVtW_OofI0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

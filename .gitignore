@@ -49,5 +49,3 @@ app.*.map.json
 *.jks
 *.keystore
 
-# Nested accidental project subtree
-/porno_social/
