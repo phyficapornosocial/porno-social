@@ -10,6 +10,14 @@ See [ALGOLIA_SETUP.md](ALGOLIA_SETUP.md) for:
 - optional index name override
 - required Algolia user index fields for current filters
 
+## Firebase App Check Setup
+
+See [APP_CHECK_SETUP.md](APP_CHECK_SETUP.md) for:
+
+- platform provider configuration used by the app
+- Firebase Console registration steps
+- web `--dart-define` configuration
+
 ## Getting Started
 
 This project is a starting point for a Flutter application.

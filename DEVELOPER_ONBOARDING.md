@@ -1,0 +1,255 @@
+# PornoSocial Developer Onboarding Guide
+
+Welcome to the PornoSocial team! This guide will get you set up and productive in 30-45 minutes.
+
+## 📋 Pre-Setup Checklist
+
+- [ ] GitHub access to `phyficapornosocial/porno-social` repository
+- [ ] Firebase Console access (pornosocial-c003d project)
+- [ ] Google Cloud Console access (same project)
+- [ ] Flutter SDK installed (v3.10.8+) — [Install Guide](https://flutter.dev/docs/get-started/install)
+- [ ] Node.js v16+ installed (for Cloud Functions)
+- [ ] Firebase CLI installed (`npm install -g firebase-tools`)
+- [ ] Android Studio with SDK (for Android development)
+- [ ] Xcode (for iOS development) — _macOS only_
+
+## 🚀 Setup Steps (15 mins)
+
+### 1. Clone & Navigate
+```bash
+git clone https://github.com/phyficapornosocial/porno-social.git
+cd porno_social
+```
+
+### 2. Install Dependencies
+```bash
+flutter pub get
+cd functions && npm install && cd ..
+```
+
+### 3. Configure Firebase (One-time)
+```bash
+firebase login
+flutterfire configure
+```
+Accept defaults; credentials are already configured.
+
+### 4. Verify Setup
+```bash
+flutter doctor           # Should show 0 issues
+flutter pub get         # All dependencies installed
+```
+
+## 🏗️ Project Structure
+
+```
+porno_social/
+├── lib/                      # Main Dart code
+│   ├── main.dart            # Entry point (Firebase init)
+│   ├── app.dart            # Root widget
+│   ├── firebase_options.dart # Auto-generated config
+│   ├── features/            # Feature modules (feed, auth, shorts, etc)
+│   ├── providers/           # Riverpod state management
+│   ├── services/            # Firebase, auth, notifications
+│   ├── repositories/        # Data layer
+│   ├── models/              # Data models
+│   ├── screens/             # UI screens
+│   ├── shared/              # Shared widgets & utils
+│   └── config/              # App configuration
+│
+├── functions/               # Cloud Functions (Node.js)
+│   ├── index.js            # Function handlers
+│   └── package.json        # Dependencies
+│
+├── android/                # Android native code
+│   ├── app/google-services.json  # Firebase config
+│   ├── app/key.properties        # Signing config
+│   └── app/pornosocial-release.jks  # Release keystore
+│
+├── ios/                    # iOS native code
+├── web/                    # Web assets
+├── pubspec.yaml           # Flutter dependencies
+├── firestore.rules        # Firestore security rules
+├── storage.rules          # Firebase Storage rules
+├── firebase.json          # Firebase config
+└── scripts/               # Build/deploy scripts (NEW!)
+```
+
+## 🔥 Firebase Architecture
+
+**Project ID:** `pornosocial-c003d`
+**Region:** Europe (eur3)
+
+### Services Enabled:
+- **Firebase Auth** — Email/Password + Google Sign-In
+- **Firestore Database** — User data, posts, follows (production mode)
+- **Firebase Storage** — Photos, videos, media
+- **Cloud Functions** — Backend logic (Node.js)
+- **Firebase Messaging** — Push notifications
+- **Firebase Hosting** — Web app (porno-social.com)
+- **Firebase Crashlytics** — Error monitoring
+
+## 🛠️ Common Commands
+
+### Development
+```bash
+# Hot reload (fastest)
+flutter run
+
+# Run on specific platform
+flutter run -d android
+flutter run -d chrome
+flutter run -d ios
+
+# Run with profiling
+flutter run --profile
+flutter run --release-mode
+```
+
+### Building & Deployment
+```bash
+# One-click build & deploy everything
+./scripts/build-and-deploy.ps1 -target all
+
+# Build web only
+./scripts/build-and-deploy.ps1 -target web
+
+# Build Android APK only
+./scripts/build-and-deploy.ps1 -target android
+
+# Deploy web to Firebase
+./scripts/deploy-web.ps1
+
+# Version bump + release
+./scripts/manage-version.ps1 -bump patch -changelog "Fixed bug X"
+```
+
+### Testing
+```bash
+# Run all tests
+flutter test
+
+# Run specific test
+flutter test test/widget_test.dart
+
+# Run integration tests
+flutter drive --target=test_driver/integration_test.dart --flavor prod
+```
+
+### Debugging
+```bash
+# View logs
+flutter logs
+
+# Run with Dart DevTools
+flutter run --debug
+
+# Profile performance
+flutter run --profile
+```
+
+## 📱 Development Platforms
+
+### Android
+- **Package:** `com.pornosocial.app`
+- **Min SDK:** 21
+- **Target SDK:** 34
+- **Signing:** Configured in `android/app/key.properties`
+
+### Web
+- **URL:** `https://porno-social.com` (production)
+- **Build:** `build/web/`
+- **Hosted:** Firebase Hosting
+
+### iOS
+- **Bundle ID:** `com.pornosocial.pornoSocial`
+- **Min version:** iOS 12.0
+- **Signing:** Requires Apple Developer account
+
+## 🔐 Security & Keys
+
+⚠️ **NEVER commit these files:**
+- `android/app/key.properties`
+- `android/app/pornosocial-release.jks`
+- `.env` (if created)
+- Firebase config files in your home directory
+
+They're in `.gitignore` — verify before committing.
+
+**Accessing Secrets:**
+- Ask your team lead for `key.properties` (added separately)
+- Firebase keys are auto-generated by `flutterfire configure`
+
+## 📊 State Management (Riverpod)
+
+All state is managed with **Riverpod** (Flutter's recommended state management).
+
+Example:
+```dart
+// providers/user_provider.dart
+final userProvider = FutureProvider<User>((ref) async {
+  final auth = FirebaseAuth.instance;
+  final user = auth.currentUser;
+  if (user == null) throw Exception("Not authenticated");
+  return user;
+});
+
+// In widget
+final user = ref.watch(userProvider);
+```
+
+## 🔥 Firestore Collections
+
+| Collection | Purpose | Rules |
+|-----------|---------|-------|
+| `users` | User profiles | Auth: read own + admin |
+| `feeds` | Feed posts | Auth: read all, write own |
+| `shorts` | Short videos | Auth: read all, write own |
+| `stories` | Stories (24h) | Auth: read all, write own |
+| `follows` | Follow relationships | Auth: manage own |
+| `messages` | Direct messages | Auth: read/write own |
+
+## 🐛 Troubleshooting
+
+### "Flutter not found"
+```bash
+# Add Flutter to PATH or use full path to flutter
+export PATH=$PATH:/path/to/flutter/bin
+```
+
+### Build fails on Android
+```bash
+# Clean and rebuild
+flutter clean
+flutter pub get
+flutter build apk --release
+```
+
+### Firebase auth not working
+- [ ] Verify app registered in Firebase Console
+- [ ] SHA-1 fingerprint added to Android config
+- [ ] Web domain whitelisted in Auth settings
+- [ ] Enable Email/Password + Google providers
+
+### Firestore rules error
+- Check browser console (Web) or logcat (Android)
+- Verify user is authenticated
+- Check Firestore security rules in Firebase Console
+
+## 📚 Documentation Links
+
+- [Flutter Docs](https://flutter.dev/docs)
+- [Firebase/Flutter](https://firebase.google.com/docs/flutter/setup)
+- [Riverpod](https://riverpod.dev)
+- [Cloud Functions](https://firebase.google.com/docs/functions)
+- [Firestore Rules](https://firebase.google.com/docs/firestore/security/get-started)
+
+## 💬 Questions?
+
+- **Slack:** #dev-pornosocial
+- **GitHub Issues:** Report bugs here
+- **Team Lead:** cbros@example.com
+
+---
+
+**Happy coding! 🚀**
