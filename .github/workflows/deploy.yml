@@ -7,17 +7,12 @@ on:
 jobs:
   deploy-web:
     runs-on: ubuntu-latest
-    # NOTE:
-    # VS Code's local GitHub Actions diagnostics can warn that custom
-    # secrets are "possibly invalid" even when workflow execution is correct.
-    env:
-      FIREBASE_SERVICE_ACCOUNT: ${{ secrets['FIREBASE_SERVICE_ACCOUNT'] }}
     steps:
       - uses: actions/checkout@v4
 
       - uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.38.9'
+          flutter-version: '3.24.0'
           channel: stable
 
       - name: Check hardcoded domain literals
@@ -33,7 +28,9 @@ jobs:
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
-          firebaseServiceAccount: ${{ env.FIREBASE_SERVICE_ACCOUNT }}
+          # NOTE: VS Code can flag custom secret names as "possibly invalid"
+          # even when GitHub Actions resolves them correctly at runtime.
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
           channelId: live
           projectId: pornosocial-c003d
           # After domain is connected, Firebase automatically serves
